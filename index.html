@@ -1,53 +1,133 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Título de la Página</title>
-  <!-- Aquí puedes incluir enlaces a CSS, fuentes, metaetiquetas, etc. -->
-  <link rel="stylesheet" href="estilos.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tu Organizador De Rutinas</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
-    <h1>Encabezado Principal</h1>
-    <!-- Navegación o logo -->
+    <h1>Tu Organizador De Rutinas</h1>
   </header>
 
-  <nav>
-    <!-- Menú de navegación -->
+  <nav role="navigation" aria-label="Menú principal">
     <ul>
-      <li><a href="#">Inicio</a></li>
-      <li><a href="#">Acerca de</a></li>
-      <li><a href="#">Contacto</a></li>
+      <li><a href="#" tabindex="0">Inicio</a></li>
+      <li><a href="#" tabindex="0">Calendario</a></li>
+      <li><a href="#" tabindex="0">Rutinas</a></li>
+      <li><a href="#" tabindex="0">Organizador</a></li>
     </ul>
   </nav>
 
-  <main>
-    <!-- Contenido principal de la página -->
-    <section>
-      <h2>Sección 1</h2>
-      <p>Texto de ejemplo.</p>
+  <main class="dashboard" role="main">
+    <h2>Resumen Diario</h2>
+    <div class="dashboard-cards">
+      <article class="card" id="tareas" aria-labelledby="tareas-titulo" tabindex="0">
+        <h3 id="tareas-titulo">Tareas de Hoy</h3>
+        <p class="card-content" aria-live="polite">Cargando...</p>
+      </article>
+
+      <article class="card" id="eventos" aria-labelledby="eventos-titulo" tabindex="0">
+        <h3 id="eventos-titulo">Eventos Próximos</h3>
+        <p class="card-content" aria-live="polite">Cargando...</p>
+      </article>
+
+      <article class="card" id="progreso" aria-labelledby="progreso-titulo" tabindex="0">
+        <h3 id="progreso-titulo">Progreso Semanal</h3>
+        <p class="card-content" aria-live="polite">Cargando...</p>
+      </article>
+
+      <article class="card" id="rutina" aria-labelledby="rutina-titulo" tabindex="0">
+        <h3 id="rutina-titulo">Rutina Destacada</h3>
+        <p class="card-content" aria-live="polite">Cargando...</p>
+      </article>
+    </div>
+
+  <section id="progreso-detallado" aria-label="Seguimiento de progreso detallado">
+    <h2>Seguimiento de Progreso</h2>
+    <canvas id="grafica-progreso" aria-label="Gráfica de progreso semanal" role="img"></canvas>
+
+    <div id="estadisticas-detalladas">
+      <p id="tareas-completadas-mes">Tareas completadas este mes: 0</p>
+      <p id="tiempo-invertido">Tiempo invertido: 0 horas</p>
+      <p id="constancia-meses">Constancia: 0 meses consecutivos</p>
+    </div>
+
+    <section id="historial-tareas" aria-label="Historial de tareas completadas">
+      <h3>Historial</h3>
+      <ul id="lista-historial"></ul>
+    </section>
+  </section>
+
+    <section class="calendario" aria-label="Calendario mensual" tabindex="0">
+      <h2>Calendario</h2>
+      <div id="vista-calendario" role="region" aria-live="polite"></div>
     </section>
 
-    <section>
-      <h2>Sección 2</h2>
-      <p>Otro texto de ejemplo.</p>
+    <section id="vista-semanal" aria-label="Filtro semanal de tareas">
+      <h2>Semana</h2>
+      <div id="botones-semana" role="group" aria-label="Selecciona el día de la semana">
+        <button data-dia="1" aria-pressed="false">Lunes</button>
+        <button data-dia="2" aria-pressed="false">Martes</button>
+        <button data-dia="3" aria-pressed="false">Miércoles</button>
+        <button data-dia="4" aria-pressed="false">Jueves</button>
+        <button data-dia="5" aria-pressed="false">Viernes</button>
+        <button data-dia="6" aria-pressed="false">Sábado</button>
+        <button data-dia="0" aria-pressed="false">Domingo</button>
+        <button data-dia="todos" aria-pressed="true">Todas</button>
+      </div>
+    </section>
+
+    <section id="tareas-seccion" aria-label="Lista y filtro de tareas">
+      <h2>Lista de Tareas</h2>
+
+      <label for="filtro-dia">Filtrar por día:</label>
+      <select id="filtro-dia" name="filtro-dia" aria-controls="lista-tareas" aria-label="Filtrar tareas por día">
+        <option value="todos">Todos</option>
+        <option value="0">Domingo</option>
+        <option value="1">Lunes</option>
+        <option value="2">Martes</option>
+        <option value="3">Miércoles</option>
+        <option value="4">Jueves</option>
+        <option value="5">Viernes</option>
+        <option value="6">Sábado</option>
+      </select>
+
+      <ul id="lista-tareas" role="list" aria-live="polite" tabindex="0"></ul>
+
+      <div id="notificacion" role="alert" aria-live="assertive" style="display:none; margin-top:10px; color: green;"></div>
+    </section>
+
+    <section class="agregar-tarea" aria-label="Formulario para agregar tareas">
+      <h2>Agregar Nueva Tarea</h2>
+      <form id="form-tarea" aria-describedby="ayuda-form-tarea">
+        <label for="input-tarea">Descripción de la tarea:</label>
+        <input type="text" id="input-tarea" name="input-tarea" placeholder="Escribe tu tarea..." required />
+
+        <label for="input-fecha">Fecha de la tarea:</label>
+        <input type="date" id="input-fecha" name="input-fecha" required />
+
+        <label for="input-hora">Hora de la tarea:</label>
+        <input type="time" id="input-hora" name="input-hora" required />
+
+        <button type="submit">Agregar</button>
+
+        <p id="ayuda-form-tarea" class="sr-only">Completa los campos para agregar una tarea nueva</p>
+      </form>
     </section>
   </main>
 
-  <aside>
-    <!-- Contenido lateral, como enlaces, anuncios, etc. -->
+  <aside role="complementary" aria-label="Información adicional">
     <h3>Información adicional</h3>
     <p>Contenido del aside.</p>
   </aside>
 
-  <footer>
-    <!-- Pie de página -->
-    <p>&copy; 2025 Tu Sitio Web. Todos los derechos reservados.</p>
+  <footer role="contentinfo">
+    <p>&copy; 2025 Sandra River. Todos los derechos reservados.</p>
   </footer>
 
-  <!-- Scripts JavaScript opcionales -->
   <script src="script.js"></script>
 </body>
 </html>
-
