@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tu Organizador De Rutinas</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="style.css" />
@@ -10,56 +10,57 @@
 <body>
   <header>
     <h1>Tu Organizador De Rutinas</h1>
+    <nav role="navigation" aria-label="Menú principal">
+      <ul>
+        <li><a href="#" tabindex="0">Inicio</a></li>
+        <li><a href="#" tabindex="0">Calendario</a></li>
+        <li><a href="#" tabindex="0">Rutinas</a></li>
+        <li><a href="#" tabindex="0">Organizador</a></li>
+      </ul>
+    </nav>
   </header>
 
-  <nav role="navigation" aria-label="Menú principal">
-    <ul>
-      <li><a href="#" tabindex="0">Inicio</a></li>
-      <li><a href="#" tabindex="0">Calendario</a></li>
-      <li><a href="#" tabindex="0">Rutinas</a></li>
-      <li><a href="#" tabindex="0">Organizador</a></li>
-    </ul>
-  </nav>
-
   <main class="dashboard" role="main">
-    <h2>Resumen Diario</h2>
-    <div class="dashboard-cards">
-      <article class="card" id="tareas" aria-labelledby="tareas-titulo" tabindex="0">
-        <h3 id="tareas-titulo">Tareas de Hoy</h3>
-        <p class="card-content" aria-live="polite">Cargando...</p>
-      </article>
+    <section aria-label="Resumen diario">
+      <h2>Resumen Diario</h2>
+      <div class="dashboard-cards">
+        <article class="card" id="tareas" aria-labelledby="tareas-titulo" tabindex="0">
+          <h3 id="tareas-titulo">Tareas de Hoy</h3>
+          <p class="card-content" aria-live="polite">Cargando...</p>
+        </article>
 
-      <article class="card" id="eventos" aria-labelledby="eventos-titulo" tabindex="0">
-        <h3 id="eventos-titulo">Eventos Próximos</h3>
-        <p class="card-content" aria-live="polite">Cargando...</p>
-      </article>
+        <article class="card" id="eventos" aria-labelledby="eventos-titulo" tabindex="0">
+          <h3 id="eventos-titulo">Eventos Próximos</h3>
+          <p class="card-content" aria-live="polite">Cargando...</p>
+        </article>
 
-      <article class="card" id="progreso" aria-labelledby="progreso-titulo" tabindex="0">
-        <h3 id="progreso-titulo">Progreso Semanal</h3>
-        <p class="card-content" aria-live="polite">Cargando...</p>
-      </article>
+        <article class="card" id="progreso" aria-labelledby="progreso-titulo" tabindex="0">
+          <h3 id="progreso-titulo">Progreso Semanal</h3>
+          <p class="card-content" aria-live="polite">Cargando...</p>
+        </article>
 
-      <article class="card" id="rutina" aria-labelledby="rutina-titulo" tabindex="0">
-        <h3 id="rutina-titulo">Rutina Destacada</h3>
-        <p class="card-content" aria-live="polite">Cargando...</p>
-      </article>
-    </div>
-
-  <section id="progreso-detallado" aria-label="Seguimiento de progreso detallado">
-    <h2>Seguimiento de Progreso</h2>
-    <canvas id="grafica-progreso" aria-label="Gráfica de progreso semanal" role="img"></canvas>
-
-    <div id="estadisticas-detalladas">
-      <p id="tareas-completadas-mes">Tareas completadas este mes: 0</p>
-      <p id="tiempo-invertido">Tiempo invertido: 0 horas</p>
-      <p id="constancia-meses">Constancia: 0 meses consecutivos</p>
-    </div>
-
-    <section id="historial-tareas" aria-label="Historial de tareas completadas">
-      <h3>Historial</h3>
-      <ul id="lista-historial"></ul>
+        <article class="card" id="rutina" aria-labelledby="rutina-titulo" tabindex="0">
+          <h3 id="rutina-titulo">Rutina Destacada</h3>
+          <p class="card-content" aria-live="polite">Cargando...</p>
+        </article>
+      </div>
     </section>
-  </section>
+
+    <section id="progreso-detallado" aria-label="Seguimiento de progreso detallado">
+      <h2>Seguimiento de Progreso</h2>
+      <canvas id="grafica-progreso" aria-label="Gráfica de progreso semanal" role="img"></canvas>
+
+      <div id="estadisticas-detalladas">
+        <p id="tareas-completadas-mes">Tareas completadas este mes: 0</p>
+        <p id="tiempo-invertido">Tiempo invertido: 0 horas</p>
+        <p id="constancia-meses">Constancia: 0 meses consecutivos</p>
+      </div>
+
+      <section id="historial-tareas" aria-label="Historial de tareas completadas">
+        <h3>Historial</h3>
+        <ul id="lista-historial"></ul>
+      </section>
+    </section>
 
     <section class="calendario" aria-label="Calendario mensual" tabindex="0">
       <h2>Calendario</h2>
@@ -83,17 +84,36 @@
     <section id="tareas-seccion" aria-label="Lista y filtro de tareas">
       <h2>Lista de Tareas</h2>
 
-      <label for="filtro-dia">Filtrar por día:</label>
-      <select id="filtro-dia" name="filtro-dia" aria-controls="lista-tareas" aria-label="Filtrar tareas por día">
-        <option value="todos">Todos</option>
-        <option value="0">Domingo</option>
-        <option value="1">Lunes</option>
-        <option value="2">Martes</option>
-        <option value="3">Miércoles</option>
-        <option value="4">Jueves</option>
-        <option value="5">Viernes</option>
-        <option value="6">Sábado</option>
-      </select>
+      <div class="filtros-tareas">
+        <label for="filtro-dia">Filtrar por día:</label>
+        <select id="filtro-dia" name="filtro-dia" aria-controls="lista-tareas" aria-label="Filtrar tareas por día">
+          <option value="todos">Todos</option>
+          <option value="0">Domingo</option>
+          <option value="1">Lunes</option>
+          <option value="2">Martes</option>
+          <option value="3">Miércoles</option>
+          <option value="4">Jueves</option>
+          <option value="5">Viernes</option>
+          <option value="6">Sábado</option>
+        </select>
+
+        <label for="filtro-categoria">Filtrar por categoría:</label>
+        <select id="filtro-categoria" aria-controls="lista-tareas" aria-label="Filtrar tareas por categoría">
+          <option value="todas">Todas las categorías</option>
+          <option value="Trabajo">Trabajo</option>
+          <option value="Personal">Personal</option>
+          <option value="Salud">Salud</option>
+          <option value="Otro">Otro</option>
+        </select>
+
+        <label for="filtro-prioridad">Filtrar por prioridad:</label>
+        <select id="filtro-prioridad" aria-controls="lista-tareas" aria-label="Filtrar tareas por prioridad">
+          <option value="todas">Todas las prioridades</option>
+          <option value="Alta">Alta</option>
+          <option value="Media">Media</option>
+          <option value="Baja">Baja</option>
+        </select>
+      </div>
 
       <ul id="lista-tareas" role="list" aria-live="polite" tabindex="0"></ul>
 
@@ -112,20 +132,73 @@
         <label for="input-hora">Hora de la tarea:</label>
         <input type="time" id="input-hora" name="input-hora" required />
 
+        <label for="input-categoria">Categoría:</label>
+        <select id="input-categoria" name="input-categoria">
+          <option value="Trabajo">Trabajo</option>
+          <option value="Personal">Personal</option>
+          <option value="Salud">Salud</option>
+          <option value="Otro">Otro</option>
+        </select>
+
+        <label for="input-prioridad">Prioridad:</label>
+        <select id="input-prioridad" name="input-prioridad">
+          <option value="Alta">Alta</option>
+          <option value="Media">Media</option>
+          <option value="Baja">Baja</option>
+        </select>
+
+        <label for="input-recurrente">Recurrencia:</label>
+        <select id="input-recurrente" name="input-recurrente">
+          <option value="">No recurrente</option>
+          <option value="diaria">Diaria</option>
+          <option value="semanal">Semanal</option>
+        </select>
+
         <button type="submit">Agregar</button>
 
         <p id="ayuda-form-tarea" class="sr-only">Completa los campos para agregar una tarea nueva</p>
       </form>
     </section>
+
+    <section id="pomodoro" aria-label="Temporizador Pomodoro">
+      <h2>Modo Focus (Pomodoro)</h2>
+      <div id="temporizador">
+        <p id="notificacion-visual" aria-live="polite" style="min-height: 1.2em;"></p>
+        <h3 id="tiempoEl">25:00</h3>
+
+        <div class="configuracion-tiempo" style="margin-bottom: 15px;">
+          <label for="inputTiempoTrabajo">Minutos de trabajo:</label>
+          <input
+            type="number"
+            id="inputTiempoTrabajo"
+            min="1"
+            max="120"
+            value="25"
+            aria-label="Minutos de trabajo"
+          />
+          <label for="inputTiempoDescanso">Minutos de descanso:</label>
+          <input
+            type="number"
+            id="inputTiempoDescanso"
+            min="1"
+            max="30"
+            value="5"
+            aria-label="Minutos de descanso"
+          />
+        </div>
+
+        <button id="btnIniciarPomodoro">Iniciar</button>
+        <button id="btnPausarPomodoro">Pausar</button>
+        <button id="btnReiniciarConfig">Reiniciar</button>
+        <p>Sesiones completadas: <span id="sesiones-completadas">0</span></p>
+        <audio id="sonidoAlerta" src="alarma.mp3" preload="auto" aria-label="Alarma del temporizador"></audio>
+      </div>
+    </section>
+
   </main>
 
-  <aside role="complementary" aria-label="Información adicional">
-    <h3>Información adicional</h3>
-    <p>Contenido del aside.</p>
-  </aside>
-
-  <footer role="contentinfo">
-    <p>&copy; 2025 Sandra River. Todos los derechos reservados.</p>
+  <footer>
+    <p>&copy; 2024 Tu Organizador De Rutinas. Todos los derechos reservados.</p>
   </footer>
 
   <script src="script.js"></script>

@@ -19,12 +19,33 @@ const DOM = {
   formTarea: document.getElementById("form-tarea"),
   stats: document.getElementById("estadisticas"),
   historial: document.getElementById("lista-historial"),
+
+  // Pomodoro
+  inputTiempoTrabajo: document.getElementById("inputTiempoTrabajo"),
+  inputTiempoDescanso: document.getElementById("inputTiempoDescanso"),
+  btnIniciarPomodoro: document.getElementById("btnIniciarPomodoro"),
+  btnPausarPomodoro: document.getElementById("btnPausarPomodoro"),
+  btnReiniciarConfig: document.getElementById("btnReiniciarConfig"),
+  notificacionVisual: document.getElementById("notificacion-visual"),
+  sonidoAlertaEl: document.getElementById("sonidoAlerta"),
+  listaHistorial: document.getElementById("lista-historial"),
+  estadoEl: document.getElementById("estado"),
+  tiempoEl: document.getElementById("tiempoEl"),
+  sesionesCompletadasEl: document.getElementById("sesiones-completadas"),
 };
 
 const sonidoAlerta = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
 
+// Variables temporizador Pomodoro
+let tiempoTrabajo = parseInt(DOM.inputTiempoTrabajo.value) * 60; // en segundos
+let tiempoDescanso = parseInt(DOM.inputTiempoDescanso.value) * 60; // en segundos
+let tiempoRestante = tiempoTrabajo;
+let enTrabajo = true; // true = trabajo, false = descanso
+let temporizadorID = null;
+let sesionesCompletadas = 0;
+
 // ====================================================
-// DASHBOARD Y UI PRINCIPAL
+// FUNCIONES DEL DASHBOARD Y GESTIÓN DE TAREAS
 // ====================================================
 function actualizarDashboard(data) {
   document.querySelector("#tareas .card-content").textContent = data.tareas;
@@ -33,13 +54,10 @@ function actualizarDashboard(data) {
   document.querySelector("#rutina .card-content").textContent = data.rutina;
 }
 
-// ====================================================
-// GESTIÓN DE TAREAS
-// ====================================================
 function guardarCambios() {
   localStorage.setItem("tareas", JSON.stringify(tareasGuardadas));
   guardarEstadisticas();
-  mostrarTareas(DOM.filtroDia.value);
+  mostrarTareas(DOM.filtroDia?.value || "todos");
   mostrarEstadisticas();
   actualizarSeguimiento();
 }
@@ -67,7 +85,7 @@ function editarTarea(index) {
 }
 
 // ====================================================
-// MOSTRAR TAREAS Y CALENDARIO
+// FUNCIONES PARA MOSTRAR TAREAS Y CALENDARIO
 // ====================================================
 function mostrarCalendario() {
   const vista = document.getElementById("vista-calendario");
@@ -75,6 +93,7 @@ function mostrarCalendario() {
 
   vista.innerHTML = "";
   const fechas = [...new Set(tareasGuardadas.map(t => t.fecha))].sort();
+
   fechas.forEach(fecha => {
     const div = document.createElement("div");
     div.classList.add("calendario-día");
@@ -86,9 +105,15 @@ function mostrarCalendario() {
 function mostrarTareas(diaFiltro = "todos") {
   DOM.lista.innerHTML = "";
 
-  let tareasFiltradas = diaFiltro === "todos"
-    ? [...tareasGuardadas]
-    : tareasGuardadas.filter(t => new Date(t.fecha).getDay() === Number(diaFiltro));
+  let tareasFiltradas, indicesMapeados;
+
+  if (diaFiltro === "todos") {
+    tareasFiltradas = [...tareasGuardadas];
+    indicesMapeados = tareasFiltradas.map((_, i) => i);
+  } else {
+    tareasFiltradas = tareasGuardadas.filter(t => new Date(t.fecha).getDay() === Number(diaFiltro));
+    indicesMapeados = tareasFiltradas.map(t => tareasGuardadas.indexOf(t));
+  }
 
   if (tareasFiltradas.length === 0) {
     DOM.lista.innerHTML = "<p>No hay tareas para este día.</p>";
@@ -100,7 +125,7 @@ function mostrarTareas(diaFiltro = "todos") {
   const tareasPorFecha = {};
   tareasFiltradas.forEach((t, i) => {
     if (!tareasPorFecha[t.fecha]) tareasPorFecha[t.fecha] = [];
-    tareasPorFecha[t.fecha].push({ ...t, index: i });
+    tareasPorFecha[t.fecha].push({ ...t, index: indicesMapeados[i] });
   });
 
   Object.keys(tareasPorFecha).sort().forEach(fecha => {
@@ -124,6 +149,10 @@ function mostrarTareas(diaFiltro = "todos") {
         if (t.completado) span.style.textDecoration = "line-through";
         li.appendChild(span);
 
+        const detalles = document.createElement("small");
+        detalles.innerHTML = `Categoría: ${t.categoria} | Prioridad: ${t.prioridad}`;
+        li.appendChild(detalles);
+
         const btnEditar = document.createElement("button");
         btnEditar.textContent = "✏️";
         btnEditar.classList.add("btn-editar");
@@ -146,7 +175,7 @@ function mostrarTareas(diaFiltro = "todos") {
 }
 
 // ====================================================
-// NOTIFICACIONES
+// FUNCIONES DE NOTIFICACIONES
 // ====================================================
 function pedirPermisoNotificaciones() {
   if ("Notification" in window) Notification.requestPermission();
@@ -199,13 +228,15 @@ function revisarRecordatorios() {
 }
 
 // ====================================================
-// ESTADÍSTICAS Y PROGRESO
+// FUNCIONES DE ESTADÍSTICAS
 // ====================================================
 function guardarEstadisticas() {
   const total = tareasGuardadas.length;
   const completadas = tareasGuardadas.filter(t => t.completado).length;
   localStorage.setItem("estadisticas", JSON.stringify({
-    total, completadas, fecha: new Date().toISOString()
+    total,
+    completadas,
+    fecha: new Date().toISOString()
   }));
 }
 
@@ -234,123 +265,143 @@ function obtenerDatosProgreso() {
     if (t.completado) {
       const fecha = new Date(t.fecha);
       semanas.forEach(s => {
-        const fin = new Date(s.inicio.getTime() + 6 * 86400000);
-        if (fecha >= s.inicio && fecha <= fin) s.completadas++;
+        if (fecha >= s.inicio && fecha < new Date(s.inicio.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+          s.completadas++;
+        }
       });
     }
   });
 
-  return semanas;
+  return semanas.map(s => ({ semana: s.inicio.toLocaleDateString(), completadas: s.completadas }));
 }
 
-function crearGraficaProgreso() {
+function actualizarSeguimiento() {
   if (!DOM.ctxGrafica) return;
+
   const datos = obtenerDatosProgreso();
-  const etiquetas = datos.map(s => `${s.inicio.toLocaleDateString()} - ${new Date(s.inicio.getTime() + 6 * 86400000).toLocaleDateString()}`);
-  const valores = datos.map(s => s.completadas);
+  const etiquetas = datos.map(d => d.semana);
+  const completadas = datos.map(d => d.completadas);
 
   if (window.graficaProgreso) {
     window.graficaProgreso.data.labels = etiquetas;
-    window.graficaProgreso.data.datasets[0].data = valores;
+    window.graficaProgreso.data.datasets[0].data = completadas;
     window.graficaProgreso.update();
   } else {
     window.graficaProgreso = new Chart(DOM.ctxGrafica, {
-      type: "bar",
+      type: 'line',
       data: {
         labels: etiquetas,
         datasets: [{
-          label: "Tareas Completadas",
-          data: valores,
-          backgroundColor: "rgba(75, 192, 192, 0.7)"
+          label: 'Tareas Completadas',
+          data: completadas,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
         }]
       },
       options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true, precision: 0 } }
+        responsive: true
       }
     });
   }
 }
 
-function mostrarEstadisticasDetalladas() {
-  const mesActual = new Date().getMonth();
-  const completadasMes = tareasGuardadas.filter(t =>
-    t.completado && new Date(t.fecha).getMonth() === mesActual
-  ).length;
-
-  const horas = (completadasMes * 0.5).toFixed(1);
-
-  document.getElementById("tareas-completadas-mes").textContent = `Tareas completadas este mes: ${completadasMes}`;
-  document.getElementById("tiempo-invertido").textContent = `Tiempo invertido: ${horas} horas`;
-  document.getElementById("constancia-meses").textContent = `Constancia: 1 mes consecutivo`;
-}
-
-function mostrarHistorial() {
-  if (!DOM.historial) return;
-
-  const tareasCompletadas = tareasGuardadas
-    .filter(t => t.completado)
-    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-    .slice(0, 10);
-
-  DOM.historial.innerHTML = "";
-  tareasCompletadas.forEach(t => {
-    const li = document.createElement("li");
-    li.textContent = `${t.texto} - ${t.fecha} ${t.hora}`;
-    DOM.historial.appendChild(li);
-  });
-}
-
-function actualizarSeguimiento() {
-  crearGraficaProgreso();
-  mostrarEstadisticasDetalladas();
-  mostrarHistorial();
-}
-
 // ====================================================
-// EVENTOS
+// FUNCIONES POMODORO
 // ====================================================
-DOM.formTarea?.addEventListener("submit", e => {
-  e.preventDefault();
-  const texto = document.getElementById("input-tarea").value.trim();
-  const fecha = document.getElementById("input-fecha").value;
-  const hora = document.getElementById("input-hora").value;
+function actualizarDisplay() {
+  const minutos = Math.floor(tiempoRestante / 60);
+  const segundos = tiempoRestante % 60;
+  DOM.tiempoEl.textContent = `${minutos.toString().padStart(2, "0")}:${segundos.toString().padStart(2, "0")}`;
+}
 
-  if (texto && fecha && hora) {
-    tareasGuardadas.push({ texto, fecha, hora, completado: false });
-    guardarCambios();
-    DOM.formTarea.reset();
-    mostrarNotificacionVisual("¡Tarea añadida correctamente!");
+function mostrarNotificacion(mensaje) {
+  DOM.notificacionVisual.textContent = mensaje;
+}
+
+function iniciarTemporizador() {
+  if (temporizadorID) return; // Evita múltiples intervalos
+  mostrarNotificacion(enTrabajo ? "Trabajando..." : "Descansando...");
+
+  temporizadorID = setInterval(() => {
+    tiempoRestante--;
+    actualizarDisplay();
+
+    if (tiempoRestante <= 0) {
+      sonidoAlerta.play();
+      clearInterval(temporizadorID);
+      temporizadorID = null;
+
+      if (enTrabajo) {
+        sesionesCompletadas++;
+        DOM.sesionesCompletadasEl.textContent = sesionesCompletadas;
+      }
+
+      enTrabajo = !enTrabajo;
+      tiempoRestante = enTrabajo
+        ? parseInt(DOM.inputTiempoTrabajo.value) * 60
+        : parseInt(DOM.inputTiempoDescanso.value) * 60;
+
+      mostrarNotificacion(enTrabajo ? "Trabajando..." : "Descansando...");
+      iniciarTemporizador();
+    }
+  }, 1000);
+}
+
+function pausarTemporizador() {
+  if (temporizadorID) {
+    clearInterval(temporizadorID);
+    temporizadorID = null;
+    mostrarNotificacion("Pausado");
   }
-});
+}
 
-DOM.filtroDia?.addEventListener("change", () => {
-  mostrarTareas(DOM.filtroDia.value);
-});
-
-DOM.botonesSemana?.forEach(button => {
-  button.addEventListener("click", () => {
-    DOM.botonesSemana.forEach(btn => btn.setAttribute("aria-pressed", "false"));
-    button.setAttribute("aria-pressed", "true");
-
-    const dia = button.getAttribute("data-dia");
-    dia === "todos" ? mostrarTareas() : mostrarTareas(parseInt(dia));
-  });
-});
+function reiniciarTemporizador() {
+  pausarTemporizador();
+  enTrabajo = true;
+  tiempoRestante = parseInt(DOM.inputTiempoTrabajo.value) * 60;
+  actualizarDisplay();
+  mostrarNotificacion("Listo para concentrarte");
+  sesionesCompletadas = 0;
+  DOM.sesionesCompletadasEl.textContent = sesionesCompletadas;
+}
 
 // ====================================================
-// INICIALIZACIÓN
+// EVENTOS Y ARRANQUE
 // ====================================================
 document.addEventListener("DOMContentLoaded", () => {
   actualizarDashboard(datosDashboard);
-  mostrarTareas();
+  mostrarTareas("todos");
   mostrarEstadisticas();
   actualizarSeguimiento();
   pedirPermisoNotificaciones();
 
-  DOM.botonesSemana?.forEach(button => {
-    button.setAttribute("aria-pressed", button.getAttribute("data-dia") === "todos" ? "true" : "false");
-  });
-});
+  tiempoRestante = parseInt(DOM.inputTiempoTrabajo.value) * 60 || 25 * 60;
+  actualizarDisplay();
+  mostrarNotificacion("Listo para concentrarte");
 
-setInterval(revisarRecordatorios, 60000);
+  DOM.btnIniciarPomodoro.disabled = false;
+  DOM.btnPausarPomodoro.disabled = true;
+
+  // Eventos botones pomodoro
+  DOM.btnIniciarPomodoro.addEventListener("click", () => {
+    iniciarTemporizador();
+    DOM.btnIniciarPomodoro.disabled = true;
+    DOM.btnPausarPomodoro.disabled = false;
+  });
+
+  DOM.btnPausarPomodoro.addEventListener("click", () => {
+    pausarTemporizador();
+    DOM.btnIniciarPomodoro.disabled = false;
+    DOM.btnPausarPomodoro.disabled = true;
+  });
+
+  DOM.btnReiniciarConfig.addEventListener("click", reiniciarTemporizador);
+
+  // Filtrar tareas por día
+  if (DOM.filtroDia) {
+    DOM.filtroDia.onchange = () => mostrarTareas(DOM.filtroDia.value);
+  }
+
+  // Revisar recordatorios cada minuto
+  setInterval(revisarRecordatorios, 60 * 1000);
+  });
